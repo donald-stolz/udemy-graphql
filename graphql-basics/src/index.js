@@ -2,14 +2,57 @@ import { GraphQLServer } from "graphql-yoga";
 
 // Scalar types - String, Boolean, Int, Float, ID
 
+// Demo data
+const users = [
+  {
+    id: "1",
+    name: "Andrew",
+    email: "anderew@example.com",
+    age: 27
+  },
+  {
+    id: "2",
+    name: "Don",
+    email: "don@example.com",
+    age: 22
+  },
+  {
+    id: "3",
+    name: "Sarah",
+    email: "sarah@example.com"
+  }
+];
+
+const posts = [
+  {
+    id: "0",
+    title: "title",
+    body: "lorem",
+    published: false,
+    author: "1"
+  },
+  {
+    id: "1",
+    title: "lorem ip",
+    body: "ipsum dolerm",
+    published: false,
+    author: "2"
+  },
+  {
+    id: "2",
+    title: "lom ip",
+    body: "ip dolerm",
+    published: true,
+    author: "3"
+  }
+];
+
 // Type definitions (schema)
 const typeDefs = `
     type Query {
-        greeting(name: String, position: String): String!
-		add(numbers: [Float!]!): Float!
-		grades: [Int!]!
+		users(query: String): [User!]!
         me: User!
-        post: Post!
+        post(query: String): [Post!]!
     }
 
     type User {
@@ -23,30 +66,21 @@ const typeDefs = `
         id: ID!
         title: String!
         body: String!
-        published: Boolean!
+		published: Boolean!
+		author: User!
     }
 `;
 
 // Resolvers
 const resolvers = {
   Query: {
-    greeting(parent, args, ctx, info) {
-      if (args.name && args.position) {
-        return `Hello, ${args.name}! You are my favoriate ${args.position}.`;
-      } else {
-        return "Hello!";
+    users(parent, args, ctx, info) {
+      if (!args.query) {
+        return users;
       }
-    },
-    add(parent, args, ctx, info) {
-      if (args.numbers.length === 0) {
-        return 0;
-      }
-      return args.numbers.reduce((accumulator, current) => {
-        return accumulator + current;
+      return users.filter(user => {
+        return user.name.toLowerCase().includes(args.query.toLowerCase());
       });
-    },
-    grades(parent, args, ctx, info) {
-      return [90, 80, 98];
     },
     me() {
       return {
@@ -55,13 +89,24 @@ const resolvers = {
         email: "mike@example.com"
       };
     },
-    post() {
-      return {
-        id: "092",
-        title: "GraphQL 101",
-        body: "",
-        published: false
-      };
+    post(parent, args, ctx, info) {
+      if (!args.query) {
+        return posts;
+      }
+
+      return posts.filter(post => {
+        return (
+          post.body.toLowerCase().includes(args.query.toLowerCase()) ||
+          post.title.toLowerCase().includes(args.query.toLowerCase())
+        );
+      });
+    }
+  },
+  Post: {
+    author(parent, args, ctx, info) {
+      return users.find(user => {
+        return user.id === parent.author;
+      });
     }
   }
 };
