@@ -1,9 +1,10 @@
 import { GraphQLServer } from "graphql-yoga";
+import uuidV4 from "uuid/v4";
 
 // Scalar types - String, Boolean, Int, Float, ID
 
 // Demo data
-const users = [
+let users = [
   {
     id: "1",
     name: "Andrew",
@@ -47,19 +48,53 @@ const posts = [
   }
 ];
 
+const comments = [
+  {
+    id: "0",
+    text: "a Ipsum",
+    author: "1",
+    post: "2"
+  },
+  {
+    id: "2",
+    text: "o Ipsum",
+    author: "1",
+    post: "2"
+  },
+  {
+    id: "3",
+    text: "e Ipsum",
+    author: "2",
+    post: "2"
+  },
+  {
+    id: "1",
+    text: "u Ipsum",
+    author: "1",
+    post: "2"
+  }
+];
+
 // Type definitions (schema)
 const typeDefs = `
     type Query {
 		users(query: String): [User!]!
         me: User!
-        post(query: String): [Post!]!
-    }
+		post(query: String): [Post!]!
+		comments(query: String): [Comment!]!
+	}
+	
+	type Mutation {
+		createUser(name: String!, email: String!, age: Int!): User!
+	}
 
     type User {
         id: ID!
         name: String!
         email: String!
-        age: Int
+		age: Int
+		posts: [Post!]!
+		comments: [Comment!]!
     }
 
     type Post {
@@ -68,7 +103,15 @@ const typeDefs = `
         body: String!
 		published: Boolean!
 		author: User!
-    }
+		comments: [Comment!]!
+	}
+	
+	type Comment {
+		id: ID!
+		text: String!
+		author: User!
+		post: Post!
+	}
 `;
 
 // Resolvers
@@ -100,12 +143,64 @@ const resolvers = {
           post.title.toLowerCase().includes(args.query.toLowerCase())
         );
       });
+    },
+    comments(parent, args, ctx, info) {
+      if (!args.query) {
+        return comments;
+      }
+    }
+  },
+  Mutation: {
+    createUser(parent, args, ctx, info) {
+      const emailTaken = users.some(user => {
+        return user.email === args.email;
+      });
+      if (emailTaken) {
+        throw new Error("Email taken.");
+      }
+      const user = {
+        id: uuidV4(),
+        name: args.name,
+        email: args.email,
+        age: args.age
+      };
+      users.push(user);
+      return user;
     }
   },
   Post: {
     author(parent, args, ctx, info) {
       return users.find(user => {
         return user.id === parent.author;
+      });
+    },
+    comments(parent, args, ctx, info) {
+      return comments.filter(comments => {
+        return comments.post === parent.id;
+      });
+    }
+  },
+  User: {
+    posts(parent, args, ctx, info) {
+      return posts.filter(post => {
+        return post.author === parent.id;
+      });
+    },
+    comments(parent, args, ctx, info) {
+      return comments.filter(comments => {
+        return comments.author === parent.id;
+      });
+    }
+  },
+  Comment: {
+    author(parent, args, ctx, info) {
+      return users.find(user => {
+        return user.id === parent.author;
+      });
+    },
+    post(parent, args, ctx, info) {
+      return posts.find(posts => {
+        return posts.id === parent.author;
       });
     }
   }
