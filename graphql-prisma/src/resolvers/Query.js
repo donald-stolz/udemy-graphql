@@ -1,6 +1,5 @@
 const Query = {
   users(parent, args, { prisma }, info) {
-    console.log(info);
     const opArgs = {};
 
     if (args.query) {
@@ -18,14 +17,14 @@ const Query = {
       email: "mike@example.com"
     };
   },
-  post(parent, args, { prisma }, info) {
+  posts(parent, args, { prisma }, info) {
     const opArgs = {};
     if (args.query) {
       opArgs.where = {
         OR: [{ title_contains: args.query }, { body_contains: args.query }]
       };
     }
-    return prisma.query.posts(null, info);
+    return prisma.query.posts(opArgs, info);
   },
   comments(parent, args, { db }, info) {
     return prisma.query.comments(opArgs, info);
