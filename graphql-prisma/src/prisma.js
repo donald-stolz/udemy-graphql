@@ -5,46 +5,48 @@ const prisma = new Prisma({
   endpoint: "http://localhost:4466"
 });
 
-const createPostForUser = async (authorId, data) => {
-  const userExists = await prisma.exists.User({ id: authorId });
-  if (!userExists) {
-    throw new Error("User not found");
-  }
-  const post = await prisma.mutation.createPost(
-    {
-      data: {
-        ...data,
-        author: {
-          connect: {
-            id: authorId
-          }
-        }
-      }
-    },
-    "{author {id name posts {title published }}}"
-  );
+export default prisma;
 
-  return post.author;
-};
+// const createPostForUser = async (authorId, data) => {
+//   const userExists = await prisma.exists.User({ id: authorId });
+//   if (!userExists) {
+//     throw new Error("User not found");
+//   }
+//   const post = await prisma.mutation.createPost(
+//     {
+//       data: {
+//         ...data,
+//         author: {
+//           connect: {
+//             id: authorId
+//           }
+//         }
+//       }
+//     },
+//     "{author {id name posts {title published }}}"
+//   );
 
-const updatePostForUser = async (postID, data) => {
-  const postExists = await prisma.exists.Post({ id: postID });
-  if (!postExists) {
-    throw new Error("Post not found");
-  }
-  const post = await prisma.mutation.updatePost(
-    {
-      where: {
-        id: postID
-      },
-      data: {
-        ...data
-      }
-    },
-    "{author {id name posts {title published }}}"
-  );
-  return post.author;
-};
+//   return post.author;
+// };
+
+// const updatePostForUser = async (postID, data) => {
+//   const postExists = await prisma.exists.Post({ id: postID });
+//   if (!postExists) {
+//     throw new Error("Post not found");
+//   }
+//   const post = await prisma.mutation.updatePost(
+//     {
+//       where: {
+//         id: postID
+//       },
+//       data: {
+//         ...data
+//       }
+//     },
+//     "{author {id name posts {title published }}}"
+//   );
+//   return post.author;
+// };
 
 // updatePostForUser("cjrpky4ut00260762thfgm75u", {
 //   title: "Another Update post",
