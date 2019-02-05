@@ -1,4 +1,6 @@
-import uuidV4 from "uuid/v4";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import getUserId from "../utils/getUserId";
 
 const Mutation = {
   async createUser(parent, args, { prisma }, info) {
@@ -6,9 +8,40 @@ const Mutation = {
     if (emailTaken) {
       throw new Error("Email taken.");
     }
+    if (args.data.password.lenght < 8) {
+      throw new Error("Password must be 8 characters or longer");
+    }
+    const password = await bcrypt.hash(args.data.password, 10);
+    const user = await prisma.mutation.createUser({
+      data: {
+        ...args.data,
+        password
+      }
+    });
 
-    const user = await prisma.mutation.createUser({ args: args.data }, info);
-    return user;
+    return {
+      user,
+      token: jwt.sign({ userId: user.id }, "supersecret")
+    };
+  },
+  async login(parent, args, { prisma }, info) {
+    const user = await prisma.query.user({
+      where: {
+        email: args.data.email
+      }
+    });
+    if (!user) {
+      throw new Error("Unable to login");
+    }
+    const isMatch = await bcrypt.compare(args.data.password, user.password);
+    if (!isMatch) {
+      throw new Error("Unable to login");
+    }
+    // ToDo part 3
+    return {
+      user,
+      token: jwt.sign({ userId: user.id }, "supersecret")
+    };
   },
   async updateUser(parent, args, { prisma }, info) {
     const userExists = await prisma.exists.User({ id: args.id });
@@ -36,7 +69,8 @@ const Mutation = {
     );
     return user;
   },
-  async createPost(parent, args, { prisma }, info) {
+  async createPost(parent, args, { prisma, request }, info) {
+    const userId = getUserId(request);
     const userExists = await prisma.exists.User({ id: args.data.author });
     if (!userExists) {
       throw new Error("Could not find User.");
@@ -48,7 +82,7 @@ const Mutation = {
           body: args.data.body,
           published: args.data.published,
           author: {
-            connect: { id: args.data.author }
+            connect: { id: userId }
           }
         }
       },
