@@ -1,33 +1,80 @@
+import { getUserId } from "../utils";
+
 const Query = {
   users(parent, args, { prisma }, info) {
     const opArgs = {};
 
     if (args.query) {
       opArgs.where = {
-        OR: [{ name_contains: args.query }, { email_contains: args.query }]
+        OR: [{ name_contains: args.query }]
       };
     }
 
     return prisma.query.users(opArgs, info);
   },
-  me() {
-    return {
-      id: "123098",
-      name: "Mike",
-      email: "mike@example.com"
+  me(parent, args, { prisma, request }, info) {
+    const userId = getUserId(request);
+    return prisma.query.user({
+      where: {
+        id: userId
+      }
+    });
+  },
+  myPosts(parent, args, { prisma, request }, info) {
+    const userId = getUserId(request);
+    const opArgs = {
+      where: {
+        author: {
+          id: userId
+        }
+      }
     };
+    if (args.query) {
+      opArgs.where.OR = [
+        { title_contains: args.query },
+        { body_contains: args.query }
+      ];
+    }
+    return prisma.query.posts(opArgs, info);
   },
   posts(parent, args, { prisma }, info) {
-    const opArgs = {};
+    const opArgs = {
+      where: { published: true }
+    };
     if (args.query) {
-      opArgs.where = {
-        OR: [{ title_contains: args.query }, { body_contains: args.query }]
-      };
+      opArgs.where.OR = [
+        { title_contains: args.query },
+        { body_contains: args.query }
+      ];
     }
     return prisma.query.posts(opArgs, info);
   },
   comments(parent, args, { db }, info) {
     return prisma.query.comments(opArgs, info);
+  },
+  async post(parent, args, { prisma, request }, info) {
+    const userId = getUserId(request, false);
+
+    const posts = await prisma.query.posts({
+      where: {
+        id: args.id,
+        OR: [
+          {
+            published: true
+          },
+          {
+            author: {
+              id: userId
+            }
+          }
+        ]
+      }
+    });
+
+    if (posts.length == 0) {
+      throw new Error("Post not found");
+    }
+    return posts[0];
   }
 };
 export default Query;
