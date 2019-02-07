@@ -1,4 +1,9 @@
-import { getUserId, generateToken, hashPassword } from "../utils";
+import {
+  getUserId,
+  generateToken,
+  hashPassword,
+  checkPassword
+} from "../utils";
 
 const Mutation = {
   async createUser(parent, args, { prisma }, info) {
@@ -29,7 +34,7 @@ const Mutation = {
     if (!user) {
       throw new Error("Unable to login");
     }
-    const isMatch = await bcrypt.compare(args.data.password, user.password);
+    const isMatch = await checkPassword(args.data.password, user.password);
     if (!isMatch) {
       throw new Error("Unable to login");
     }

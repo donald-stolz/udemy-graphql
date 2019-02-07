@@ -7,7 +7,7 @@ const getUserId = (request, requireAuth = true) => {
     : request.connection.context.Authorization;
   if (header) {
     const token = header.replace("Bearer ", "");
-    const decoded = jwt.verify(token, "supersecret");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return decoded.userId;
   }
   if (requireAuth) {
@@ -17,7 +17,7 @@ const getUserId = (request, requireAuth = true) => {
 };
 
 const generateToken = id => {
-  return jwt.sign({ userId: id }, "supersecret", { expiresIn: "1d" });
+  return jwt.sign({ userId: id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 };
 
 const hashPassword = password => {
@@ -27,4 +27,8 @@ const hashPassword = password => {
   return bcrypt.hash(password, 10);
 };
 
-export { getUserId, generateToken, hashPassword };
+const checkPassword = (check, password) => {
+  return bcrypt.compare(check, password);
+};
+
+export { getUserId, generateToken, hashPassword, checkPassword };
