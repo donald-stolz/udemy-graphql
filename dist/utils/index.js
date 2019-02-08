@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.hashPassword = exports.generateToken = exports.getUserId = undefined;
+exports.checkPassword = exports.hashPassword = exports.generateToken = exports.getUserId = undefined;
 
 var _jsonwebtoken = require("jsonwebtoken");
 
@@ -21,7 +21,7 @@ var getUserId = function getUserId(request) {
   var header = request.request ? request.request.headers.authorization : request.connection.context.Authorization;
   if (header) {
     var token = header.replace("Bearer ", "");
-    var decoded = _jsonwebtoken2.default.verify(token, "supersecret");
+    var decoded = _jsonwebtoken2.default.verify(token, process.env.JWT_SECRET);
     return decoded.userId;
   }
   if (requireAuth) {
@@ -31,7 +31,7 @@ var getUserId = function getUserId(request) {
 };
 
 var generateToken = function generateToken(id) {
-  return _jsonwebtoken2.default.sign({ userId: id }, "supersecret", { expiresIn: "1d" });
+  return _jsonwebtoken2.default.sign({ userId: id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 };
 
 var hashPassword = function hashPassword(password) {
@@ -41,6 +41,11 @@ var hashPassword = function hashPassword(password) {
   return _bcryptjs2.default.hash(password, 10);
 };
 
+var checkPassword = function checkPassword(check, password) {
+  return _bcryptjs2.default.compare(check, password);
+};
+
 exports.getUserId = getUserId;
 exports.generateToken = generateToken;
 exports.hashPassword = hashPassword;
+exports.checkPassword = checkPassword;

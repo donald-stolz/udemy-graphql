@@ -93,7 +93,7 @@ var Mutation = {
 
             case 5:
               _context2.next = 7;
-              return bcrypt.compare(args.data.password, user.password);
+              return (0, _utils.checkPassword)(args.data.password, user.password);
 
             case 7:
               isMatch = _context2.sent;
