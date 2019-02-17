@@ -7,8 +7,12 @@
     "start": "node dist/index.js",
     "heroku-postbuild": "babel src --out-dir dist --copy-files",
     "dev": "env-cmd ./config/dev.env nodemon src/index.js --ext js,graphql --exec babel-node",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "env-cmd ./config/test.env jest --watch",
     "get-schema": "graphql get-schema -p prisma --dotenv config/dev.env"
+  },
+  "jest": {
+    "globalSetup": "./tests/config/globalSetup.js",
+    "globalTeardown": "./tests/config/globalTeardown.js"
   },
   "author": "",
   "license": "ISC",
@@ -25,6 +29,7 @@
     "prisma-binding": "^2.1.1"
   },
   "devDependencies": {
+    "jest": "^24.1.0",
     "nodemon": "^1.17.5"
   }
 }
